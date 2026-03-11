@@ -1,5 +1,5 @@
 "use client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import React, { useState } from "react";
 import {
@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Skeleton } from "./ui/skeleton";
+import { useForm } from "react-hook-form";
 
 const Dashboard = () => {
   const [search, setSearch] = useState("");
@@ -42,8 +43,34 @@ const Dashboard = () => {
       return res.data;
     },
   });
-  console.log(posts);
-  const handleCreate = () => {};
+  const queryClient = useQueryClient();
+
+  const createMutation = useMutation({
+    mutationFn: async (newPost) => {
+      const res = await axios.post(
+        "https://jsonplaceholder.typicode.com/posts",
+        newPost,
+      );
+      return res.data;
+    },
+
+    onSuccess: (data) => {
+      queryClient.setQueryData(["posts"], (oldPosts = []) => [
+        data,
+        ...oldPosts,
+      ]);
+    },
+  });
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+
+  const handleCreate = async (data) => {
+    createMutation.mutate(data);
+  };
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -56,7 +83,7 @@ const Dashboard = () => {
           </p>
         </div>
         <Dialog>
-          <DialogTrigger>
+          <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700">
               <Plus className="mr-2 h-4 w-4" /> Add Contact
             </Button>
@@ -66,6 +93,52 @@ const Dashboard = () => {
               <DialogTitle className="text-xl font-bold text-white">
                 Create New Contact
               </DialogTitle>
+              <form
+                onSubmit={handleSubmit(handleCreate)}
+                className="space-y-4 pt-4">
+                <div className=" gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Title</label>
+                    <Input
+                      name="title"
+                      placeholder="Title Here"
+                      {...register("title", { required: true })}
+                      className="bg-[#0f1115] border-slate-800"
+                    />
+                    {errors.title && (
+                      <span className="text-xs text-red-400">
+                        This field is required
+                      </span>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Post</label>
+                    <Input
+                      name="body"
+                      type="text"
+                      placeholder="Post here..."
+                      {...register("body", { required: true })}
+                      className="bg-[#0f1115] border-slate-800"
+                    />
+                    {errors.body && (
+                      <span className="text-xs text-red-400">
+                        This field is required
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <DialogFooter className="pt-4">
+                  <Button
+                    type="submit"
+                    disabled={createMutation.isPending}
+                    className="w-full bg-blue-600 hover:bg-blue-700">
+                    {createMutation.isPending
+                      ? "Creating..."
+                      : "Create Contact"}
+                  </Button>
+                </DialogFooter>
+              </form>
             </DialogHeader>
           </DialogContent>
         </Dialog>
@@ -90,15 +163,15 @@ const Dashboard = () => {
                 {posts.map((post) => (
                   <TableRow
                     key={post.id}
-                    className="border-slate-800 grid grid-cols-2 gap-10">
+                    className="group border-slate-800 hover:bg-slate-800/30 transition-colors">
                     {/* Post Content */}
-                    <TableCell className=" align-top">
+                    <TableCell className="align-top hover:bg-transparent">
                       <div className="flex flex-col gap-1">
-                        <span className="font-medium text-white">
+                        <span className="font-medium text-white group-hover:text-blue-400 transition-colors">
                           {post?.title}
                         </span>
 
-                        <span className="text-xs text-slate-500 flex items-start gap-1 max-w-125 wrap-break-word">
+                        <span className="text-xs text-slate-500 flex items-center gap-1">
                           <NotebookText className="h-3 w-3 text-blue-500/70 mt-0.5 " />
                           {post?.body.slice(0, 100)}...
                         </span>
