@@ -21,9 +21,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Building2,
   Globe,
-  Mail,
   NotebookText,
   Pencil,
   Plus,
@@ -33,9 +31,15 @@ import {
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Skeleton } from "./ui/skeleton";
 import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 
 const Dashboard = () => {
   const [search, setSearch] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["posts"],
     queryFn: async () => {
@@ -43,8 +47,9 @@ const Dashboard = () => {
       return res.data;
     },
   });
-  const queryClient = useQueryClient();
 
+  const queryClient = useQueryClient();
+  // Create post
   const createMutation = useMutation({
     mutationFn: async (newPost) => {
       const res = await axios.post(
@@ -61,16 +66,25 @@ const Dashboard = () => {
       ]);
     },
   });
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
-
   const handleCreate = async (data) => {
     createMutation.mutate(data);
   };
+
+  // delete post
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+      await axios.delete(`https://jsonplaceholder.typicode.com/posts/${id}`);
+      return id;
+    },
+    onSuccess: (id) => {
+      queryClient.setQueryData(["posts"], (old) => {
+        return old?.filter((u) => u.id !== id);
+      });
+      toast.success("Post deleted successfully");
+    },
+    onError: () => toast.error("Failed to delete Post"),
+  });
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -191,6 +205,8 @@ const Dashboard = () => {
                         <Button
                           variant="ghost"
                           size="icon"
+                          onClick={() => deleteMutation.mutate(post.id)}
+                          disabled={deleteMutation.isPending}
                           className="h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-red-400/10">
                           <Trash2 className="h-4 w-4" />
                         </Button>

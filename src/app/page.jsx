@@ -1,6 +1,7 @@
 import Dashboard from "@/components/Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import toast, { Toaster } from "react-hot-toast";
 import {
   LayoutDashboard,
   Users,
@@ -79,6 +80,7 @@ const page = () => {
           <Dashboard />
         </div>
       </main>
+      <Toaster />
     </div>
   );
 };
