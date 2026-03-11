@@ -35,6 +35,9 @@ import toast from "react-hot-toast";
 
 const Dashboard = () => {
   const [search, setSearch] = useState("");
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
   const {
     register,
     handleSubmit,
@@ -64,6 +67,8 @@ const Dashboard = () => {
         data,
         ...oldPosts,
       ]);
+      toast.success("Contact created successfully");
+      setIsCreateOpen(false);
     },
   });
   const handleCreate = async (data) => {
@@ -85,6 +90,35 @@ const Dashboard = () => {
     onError: () => toast.error("Failed to delete Post"),
   });
 
+  // update post
+  const updateMutation = useMutation({
+    mutationFn: async (updatedPost) => {
+      const res = await axios.put(
+        `https://jsonplaceholder.typicode.com/posts/${updatedPost.id}`,
+        updatedPost,
+      );
+      console.log(res.data);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["posts"], (old) => {
+        return old?.map((u) => (u.id === data.id ? data : u));
+      });
+      toast.success("Post updated successfully");
+      setIsEditOpen(false);
+    },
+    onError: () => toast.error("Failed to update Post"),
+  });
+
+  const handleUpdate = (data) => {
+    if (!selectedPost) return;
+    const updatedPost = {
+      ...selectedPost,
+      ...data,
+    };
+    updateMutation.mutate(updatedPost);
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -96,7 +130,7 @@ const Dashboard = () => {
             Manage your professional network and team members.
           </p>
         </div>
-        <Dialog>
+        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700">
               <Plus className="mr-2 h-4 w-4" /> Add Contact
@@ -184,7 +218,6 @@ const Dashboard = () => {
                         <span className="font-medium text-white group-hover:text-blue-400 transition-colors">
                           {post?.title}
                         </span>
-
                         <span className="text-xs text-slate-500 flex items-center gap-1">
                           <NotebookText className="h-3 w-3 text-blue-500/70 mt-0.5 " />
                           {post?.body.slice(0, 100)}...
@@ -198,6 +231,10 @@ const Dashboard = () => {
                         <Button
                           variant="ghost"
                           size="icon"
+                          onClick={() => {
+                            setSelectedPost(post);
+                            setIsEditOpen(true);
+                          }}
                           className="h-8 w-8 text-slate-400 hover:text-blue-400 hover:bg-blue-400/10">
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -219,6 +256,61 @@ const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="bg-[#16191f] text-slate-200 border-slate-800 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-white">
+              Edit Contact
+            </DialogTitle>
+          </DialogHeader>
+          {selectedPost && (
+            <form
+              onSubmit={handleSubmit(handleUpdate)}
+              className="space-y-4 pt-4">
+              <div className=" gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Title</label>
+                  <Input
+                    name="title"
+                    placeholder="Title Here"
+                    {...register("title", { required: true })}
+                    className="bg-[#0f1115] border-slate-800"
+                  />
+                  {errors.title && (
+                    <span className="text-xs text-red-400">
+                      This field is required
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Post</label>
+                  <Input
+                    name="body"
+                    type="text"
+                    placeholder="Post here..."
+                    {...register("body", { required: true })}
+                    className="bg-[#0f1115] border-slate-800"
+                  />
+                  {errors.body && (
+                    <span className="text-xs text-red-400">
+                      This field is required
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <DialogFooter className="pt-4">
+                <Button
+                  type="submit"
+                  disabled={updateMutation.isPending}
+                  className="w-full bg-blue-600 hover:bg-blue-700">
+                  {updateMutation.isPending ? "Updating..." : "Update Post"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
