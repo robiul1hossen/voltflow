@@ -214,9 +214,21 @@ const Dashboard = () => {
             <Table className="table-fixed w-full">
               <TableBody>
                 {isLoading ? (
-                  <p>Loading...</p>
+                  Array.from({ length: 8 }).map((_, i) => (
+                    <TableRow key={i} className="border-slate-800">
+                      <TableCell>
+                        <Skeleton className="h-12 w-full bg-slate-800" />
+                      </TableCell>
+                    </TableRow>
+                  ))
                 ) : filteredPost.length === 0 ? (
-                  <p>No post found</p>
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      className="h-24 text-center text-slate-500">
+                      No Posts found.
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   <>
                     {filteredPost.map((post) => (
@@ -287,7 +299,7 @@ const Dashboard = () => {
                     name="title"
                     placeholder="Title Here"
                     defaultValue={selectedPost?.title}
-                    {...register("title", { required: true })}
+                    {...register("title")}
                     className="bg-[#0f1115] border-slate-800"
                   />
                 </div>
@@ -298,7 +310,7 @@ const Dashboard = () => {
                     type="text"
                     defaultValue={selectedPost?.body}
                     placeholder="Post here..."
-                    {...register("body", { required: true })}
+                    {...register("body")}
                     className="bg-[#0f1115] border-slate-800"
                   />
                 </div>
