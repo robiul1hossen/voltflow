@@ -87,7 +87,7 @@ const Dashboard = () => {
       });
       toast.success("Post deleted successfully");
     },
-    onError: () => toast.error("Failed to delete Post"),
+    onError: () => toast.error("Failed to delete Task"),
   });
 
   // update post
@@ -131,16 +131,16 @@ const Dashboard = () => {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white">
-            Posts Directory
+            Task Management
           </h1>
           <p className="text-slate-400">
-            Manage your professional network and team members.
+            Manage your tasks in professional way.
           </p>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="mr-2 h-4 w-4" /> Add A Post
+              <Plus className="mr-2 h-4 w-4" /> Add A Task
             </Button>
           </DialogTrigger>
           <DialogContent className="bg-[#16191f] text-slate-200 border-slate-800 shadow-2xl">
@@ -201,7 +201,7 @@ const Dashboard = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
             <Input
-              placeholder="Search by title or post..."
+              placeholder="Search task by title or body..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10 bg-[#0f1115] border-slate-800 text-slate-200"
@@ -321,7 +321,7 @@ const Dashboard = () => {
                   type="submit"
                   disabled={updateMutation.isPending}
                   className="w-full bg-blue-600 hover:bg-blue-700">
-                  {updateMutation.isPending ? "Updating..." : "Update Post"}
+                  {updateMutation.isPending ? "Updating..." : "Update Task"}
                 </Button>
               </DialogFooter>
             </form>
