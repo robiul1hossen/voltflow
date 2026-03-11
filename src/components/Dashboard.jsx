@@ -67,7 +67,7 @@ const Dashboard = () => {
         data,
         ...oldPosts,
       ]);
-      toast.success("Contact created successfully");
+      toast.success("Post created successfully");
       setIsCreateOpen(false);
     },
   });
@@ -109,7 +109,6 @@ const Dashboard = () => {
     },
     onError: () => toast.error("Failed to update Post"),
   });
-
   const handleUpdate = (data) => {
     if (!selectedPost) return;
     const updatedPost = {
@@ -119,12 +118,20 @@ const Dashboard = () => {
     updateMutation.mutate(updatedPost);
   };
 
+  // search post
+  const filteredPost = posts?.filter(
+    (p) =>
+      p.title.toLowerCase().includes(search.toLowerCase()) ||
+      p.body.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  console.log(search);
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white">
-            Contact Directory
+            Posts Directory
           </h1>
           <p className="text-slate-400">
             Manage your professional network and team members.
@@ -133,13 +140,13 @@ const Dashboard = () => {
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="mr-2 h-4 w-4" /> Add Contact
+              <Plus className="mr-2 h-4 w-4" /> Add A Post
             </Button>
           </DialogTrigger>
           <DialogContent className="bg-[#16191f] text-slate-200 border-slate-800 shadow-2xl">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-white">
-                Create New Contact
+                Create New Post
               </DialogTitle>
               <form
                 onSubmit={handleSubmit(handleCreate)}
@@ -181,9 +188,7 @@ const Dashboard = () => {
                     type="submit"
                     disabled={createMutation.isPending}
                     className="w-full bg-blue-600 hover:bg-blue-700">
-                    {createMutation.isPending
-                      ? "Creating..."
-                      : "Create Contact"}
+                    {createMutation.isPending ? "Creating..." : "Create Post"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -196,7 +201,7 @@ const Dashboard = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
             <Input
-              placeholder="Search by name or email..."
+              placeholder="Search by title or post..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10 bg-[#0f1115] border-slate-800 text-slate-200"
@@ -208,49 +213,57 @@ const Dashboard = () => {
           <div className="rounded-md border border-slate-800">
             <Table className="table-fixed w-full">
               <TableBody>
-                {posts.map((post) => (
-                  <TableRow
-                    key={post.id}
-                    className="group border-slate-800 hover:bg-slate-800/30 transition-colors">
-                    {/* Post Content */}
-                    <TableCell className="align-top hover:bg-transparent">
-                      <div className="flex flex-col gap-1">
-                        <span className="font-medium text-white group-hover:text-blue-400 transition-colors">
-                          {post?.title}
-                        </span>
-                        <span className="text-xs text-slate-500 flex items-center gap-1">
-                          <NotebookText className="h-3 w-3 text-blue-500/70 mt-0.5 " />
-                          {post?.body.slice(0, 100)}...
-                        </span>
-                      </div>
-                    </TableCell>
+                {isLoading ? (
+                  <p>Loading...</p>
+                ) : filteredPost.length === 0 ? (
+                  <p>No post found</p>
+                ) : (
+                  <>
+                    {filteredPost.map((post) => (
+                      <TableRow
+                        key={post.id}
+                        className="group border-slate-800 hover:bg-slate-800/30 transition-colors">
+                        {/* Post Content */}
+                        <TableCell className="align-top hover:bg-transparent">
+                          <div className="flex flex-col gap-1">
+                            <span className="font-medium text-white group-hover:text-blue-400 transition-colors">
+                              {post?.title}
+                            </span>
+                            <span className="text-xs text-slate-500 flex items-center gap-1">
+                              <NotebookText className="h-3 w-3 text-blue-500/70 mt-0.5 " />
+                              {post?.body.slice(0, 100)}...
+                            </span>
+                          </div>
+                        </TableCell>
 
-                    {/* Actions */}
-                    <TableCell className=" text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setSelectedPost(post);
-                            setIsEditOpen(true);
-                          }}
-                          className="h-8 w-8 text-slate-400 hover:text-blue-400 hover:bg-blue-400/10">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
+                        {/* Actions */}
+                        <TableCell className=" text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedPost(post);
+                                setIsEditOpen(true);
+                              }}
+                              className="h-8 w-8 text-slate-400 hover:text-blue-400 hover:bg-blue-400/10">
+                              <Pencil className="h-4 w-4" />
+                            </Button>
 
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => deleteMutation.mutate(post.id)}
-                          disabled={deleteMutation.isPending}
-                          className="h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-red-400/10">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => deleteMutation.mutate(post.id)}
+                              disabled={deleteMutation.isPending}
+                              className="h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-red-400/10">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </>
+                )}
               </TableBody>
             </Table>
           </div>
@@ -260,7 +273,7 @@ const Dashboard = () => {
         <DialogContent className="bg-[#16191f] text-slate-200 border-slate-800 shadow-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-white">
-              Edit Contact
+              Edit Post
             </DialogTitle>
           </DialogHeader>
           {selectedPost && (
@@ -273,29 +286,21 @@ const Dashboard = () => {
                   <Input
                     name="title"
                     placeholder="Title Here"
+                    defaultValue={selectedPost?.title}
                     {...register("title", { required: true })}
                     className="bg-[#0f1115] border-slate-800"
                   />
-                  {errors.title && (
-                    <span className="text-xs text-red-400">
-                      This field is required
-                    </span>
-                  )}
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Post</label>
                   <Input
                     name="body"
                     type="text"
+                    defaultValue={selectedPost?.body}
                     placeholder="Post here..."
                     {...register("body", { required: true })}
                     className="bg-[#0f1115] border-slate-800"
                   />
-                  {errors.body && (
-                    <span className="text-xs text-red-400">
-                      This field is required
-                    </span>
-                  )}
                 </div>
               </div>
 
